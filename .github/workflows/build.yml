@@ -16,4 +16,4 @@ jobs:
         run: make
 
       - name: ctest
-        run: bin/test
+        run: make test
