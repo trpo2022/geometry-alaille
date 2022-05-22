@@ -15,5 +15,5 @@ jobs:
       - name: Build application
         run: make
 
-      - name: tests
-        run: make test && ./bin/tests.exe
+      - name: ctest
+        run: bin/test
