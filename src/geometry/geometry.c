@@ -39,7 +39,9 @@ int main()
     if (isalpha(*mark3) != 0) {
         while (isalpha(*mark4) != 0)
             mark4++;
+
     }
+
     if (mainchek(mark3, wr) == 1)
         return 0;
     else
