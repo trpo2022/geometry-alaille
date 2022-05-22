@@ -1,7 +1,9 @@
 #include "ctest.h"
 #include <stdbool.h>
-#include <stdlio.h>
-#include "libgeometry/libmainchek.h"
+#include <stdio.h>
+
+#include "lib/libmainchek.h"
+
 
 
 CTEST(input, word_chek_true)
