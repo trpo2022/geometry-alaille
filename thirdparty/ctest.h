@@ -1,17 +1,17 @@
-    /* Copyright 2011-2012 Bas van den Berg
-    *
-    * Licensed under the Apache License, Version 2.0 (the "License");
-    * you may not use this file except in compliance with the License.
-    * You may obtain a copy of the License at
-    *
-    * http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing, software
-    * distributed under the License is distributed on an "AS IS" BASIS,
-    * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    * See the License for the specific language governing permissions and
-    * limitations under the License.
-    */
+/* Copyright 2011-2022 Bas van den Berg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef CTEST_H
 #define CTEST_H
@@ -26,8 +26,8 @@ extern "C" {
 #define CTEST_IMPL_FORMAT_PRINTF(a, b)
 #endif
 
-#include <inttypes.h> 
-#include <stddef.h> 
+#include <inttypes.h> /* intmax_t, uintmax_t, PRI* */
+#include <stddef.h> /* size_t */
 
 typedef void (*ctest_nullary_run_func)(void);
 typedef void (*ctest_unary_run_func)(void*);
@@ -43,26 +43,27 @@ union ctest_run_func_union {
 
 #if defined(__GNUC__)
 #if defined(__clang__) || __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
-
+/* the GCC argument will work for both gcc and clang  */
 #define CTEST_IMPL_DIAG_PUSH_IGNORED(w) \
     CTEST_IMPL_PRAGMA(GCC diagnostic push) \
     CTEST_IMPL_PRAGMA(GCC diagnostic ignored "-W" #w)
 #define CTEST_IMPL_DIAG_POP() \
     CTEST_IMPL_PRAGMA(GCC diagnostic pop)
 #else
+/* the push/pop functionality wasn't in gcc until 4.6, fallback to "ignored"  */
 #define CTEST_IMPL_DIAG_PUSH_IGNORED(w) \
     CTEST_IMPL_PRAGMA(GCC diagnostic ignored "-W" #w)
 #define CTEST_IMPL_DIAG_POP()
 #endif
 #else
-
+/* leave them out entirely for non-GNUC compilers  */
 #define CTEST_IMPL_DIAG_PUSH_IGNORED(w)
 #define CTEST_IMPL_DIAG_POP()
 #endif
 
 struct ctest {
-    const char* ssname;  
-    const char* ttname;  
+    const char* ssname;  // suite name
+    const char* ttname;  // test name
     union ctest_run_func_union run;
 
     void* data;
@@ -163,7 +164,7 @@ struct ctest {
 #endif
 
 void CTEST_LOG(const char* fmt, ...) CTEST_IMPL_FORMAT_PRINTF(1, 2);
-void CTEST_ERR(const char* fmt, ...) CTEST_IMPL_FORMAT_PRINTF(1, 2);  
+void CTEST_ERR(const char* fmt, ...) CTEST_IMPL_FORMAT_PRINTF(1, 2);  // doesn't return
 
 #define CTEST(sname, tname) CTEST_IMPL_CTEST(sname, tname, 0)
 #define CTEST_SKIP(sname, tname) CTEST_IMPL_CTEST(sname, tname, 1)
@@ -268,14 +269,14 @@ static void vprint_errormsg(const char* const fmt, va_list ap) CTEST_IMPL_FORMAT
 static void print_errormsg(const char* const fmt, ...) CTEST_IMPL_FORMAT_PRINTF(1, 2);
 
 static void vprint_errormsg(const char* const fmt, va_list ap) {
-   
+    // (v)snprintf returns the number that would have been written
     const int ret = vsnprintf(ctest_errormsg, ctest_errorsize, fmt, ap);
     if (ret < 0) {
         ctest_errormsg[0] = 0x00;
     } else {
         const size_t size = (size_t) ret;
         const size_t s = (ctest_errorsize <= size ? size -ctest_errorsize : size);
-        
+        // ctest_errorsize may overflow at this point
         ctest_errorsize -= s;
         ctest_errormsg += s;
     }
@@ -395,7 +396,7 @@ void assert_interval(intmax_t exp1, intmax_t exp2, intmax_t real, const char* ca
 void assert_dbl_near(double exp, double real, double tol, const char* caller, int line) {
     double diff = exp - real;
     double absdiff = diff;
-    
+    /* avoid using fabs and linking with a math lib */
     if(diff < 0) {
       absdiff *= -1;
     }
@@ -407,7 +408,7 @@ void assert_dbl_near(double exp, double real, double tol, const char* caller, in
 void assert_dbl_far(double exp, double real, double tol, const char* caller, int line) {
     double diff = exp - real;
     double absdiff = diff;
-    
+    /* avoid using fabs and linking with a math lib */
     if(diff < 0) {
       absdiff *= -1;
     }
@@ -446,7 +447,7 @@ void assert_fail(const char* caller, int line) {
 
 
 static int suite_all(struct ctest* t) {
-    (void) t; 
+    (void) t; // fix unused parameter warning
     return 1;
 }
 
@@ -480,7 +481,8 @@ static void sighandler(int signum)
     const char* msg = color_output ? msg_color : msg_nocolor;
     write(STDOUT_FILENO, msg, strlen(msg));
 
-    
+    /* "Unregister" the signal handler and send the signal back to the process
+     * so it can terminate as expected */
     signal(signum, SIG_DFL);
     kill(getpid(), signum);
 }
@@ -514,7 +516,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 
     struct ctest* ctest_begin = &CTEST_IMPL_TNAME(suite, test);
     struct ctest* ctest_end = &CTEST_IMPL_TNAME(suite, test);
-    
+    // find begin and end of section by comparing magics
     while (1) {
         struct ctest* t = ctest_begin-1;
         if (t->magic != CTEST_IMPL_MAGIC) break;
@@ -525,7 +527,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
         if (t->magic != CTEST_IMPL_MAGIC) break;
         ctest_end++;
     }
-    ctest_end++;    
+    ctest_end++;    // end after last one
 
     static struct ctest* test;
     for (test = ctest_begin; test != ctest_end; test++) {
@@ -553,7 +555,7 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
                     else
                         test->run.nullary();
                     if (test->teardown && *test->teardown) (*test->teardown)(test->data);
-                    
+                    // if we got here it's ok
 #ifdef CTEST_COLOR_OK
                     color_print(ANSI_BGREEN, "[OK]");
 #else
