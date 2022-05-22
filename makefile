@@ -1,50 +1,61 @@
-	LIB_DIR = src/lib/
-	LIB_TEST = test/
-	LIB_MAIN = src/main/
-	CC = gcc
-	AR = ar rc
-	FLAG = -lm -o
-	O_FLAG_CALC = -Wall -Wextra -I src -c -MP -MMD
-	O_FLAG_TEST = -Wall -Wextra -I thirdparty -I src -c -MP -MMD
-	BIN = bin/
-	OBJ_LIB = obj/$(LIB_DIR)
-	OBJ_MAIN = obj/$(LIB_MAIN)
-	OBJ_TEST = obj/$(LIB_TEST)
+APP_NAME = geometry
+LIB_NAME = libgeometry
+TEST_NAME = test
 
-	all: $(BIN)geometry.exe $(BIN)tests.exe
-	calc: $(BIN)geometry.exe
+CFLAGS = -Wall -Werror
+CPPFLAGS = -I src -MP -MMD
+LBOFLAGS = -lm
 
-	test: $(BIN)tests.exe
+OBJ_DIR = obj
+SRC_DIR = src
+TEST_DIR = test
 
-	$(BIN)geometry.exe: $(BIN)calc.a
-	$(CC) $(BIN)calc.a $(FLAG) $@
+TEST_PATH = $(TEST_NAME)
+APP_PATH = $(APP_NAME)
+LIB_PATH = $(OBJ_DIR)/$(SRC_DIR)/$(LIB_NAME)/$(LIB_NAME).a
 
-	$(BIN)tests.exe: $(BIN)test.a
-	$(CC) $(OBJ_TEST)test_main.o $(OBJ_TEST)test.o $(OBJ_LIB)lib_main_chek.o $(FLAG) $@
+SRC_EXT = c
 
-	$(BIN)test.a: $(OBJ_TEST)test_main.o $(OBJ_TEST)test.o $(OBJ_LIB)lib_main_chek.o
-	$(AR) $@ $(OBJ_TEST)test_main.o $(OBJ_TEST)test.o $(OBJ_LIB)lib_main_chek.o
+APP_SOURCES = $(shell find $(SRC_DIR)/$(APP_NAME) -name '*.$(SRC_EXT)')
+APP_OBJECTS = $(APP_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 
-	$(BIN)calc.a: $(OBJ_LIB)lib_calc_trans.o $(OBJ_LIB)lib_main_chek.o $(OBJ_MAIN)geometry_lab4.o
-	$(AR) $@ $(OBJ_LIB)lib_calc_trans.o $(OBJ_LIB)lib_main_chek.o $(OBJ_MAIN)geometry_lab4.o
+LIB_SOURCES = $(shell find $(SRC_DIR)/$(LIB_NAME) -name '*.$(SRC_EXT)')
+LIB_OBJECTS = $(LIB_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 
-	$(OBJ_TEST)test_main.o: $(LIB_TEST)test_main.c
-	$(CC) $(O_FLAG_TEST) $(LIB_TEST)test_main.c -o $@
+TEST_SOURCES = $(shell find $(TEST_DIR)/ -name '*.$(SRC_EXT)')
+TEST_OBJECTS = $(TEST_SOURCES:$(TEST_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(TEST_DIR)/%.o)
 
-	$(OBJ_TEST)test.o: $(LIB_TEST)test.c
-	$(CC) $(O_FLAG_TEST) $(LIB_TEST)test.c -o $@
+DEPS = $(APP_OBJECTS:.o=.d) $(LIB_OBJECTS:.o=.d) $(TEST_OBJECTS:.o=.d) 
 
-	$(OBJ_MAIN)geometry_lab4.o: $(LIB_MAIN)geometry_lab4.c
-	$(CC) $(O_FLAG_CALC) $(LIB_MAIN)geometry_lab4.c $(FLAG) $@
+.PHONY: all lib test
+all: $(APP_PATH)
 
-	$(OBJ_LIB)lib_calc_trans.o: $(LIB_DIR)lib_calc_trans.c
-	$(CC) $(O_FLAG_CALC) $(LIB_DIR)lib_calc_trans.c $(FLAG) $@
+-include $(DEPS)
 
-	$(OBJ_LIB)lib_main_chek.o: $(LIB_DIR)lib_main_chek.c
-	$(CC) $(O_FLAG_CALC) $(LIB_DIR)lib_main_chek.c $(FLAG) $@
+$(APP_PATH): $(APP_OBJECTS) $(LIB_PATH)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@ $(LBOFLAGS)
 
-	.PHONY: clean
-	clean:
-	$(RM) $(OBJ_LIB)*.o $(OBJ_MAIN)*.o $(OBJ_TEST)*.o
-	$(RM) $(OBJ_LIB)*.d $(OBJ_MAIN)*.d $(OBJ_TEST)*.d
-	$(RM) $(BIN)*.exe $(BIN)*.a
+$(LIB_PATH): $(LIB_OBJECTS) 
+	ar rcs $@ $^
+
+$(OBJ_DIR)/$(SRC_DIR)/$(APP_NAME)/%.o: $(SRC_DIR)/$(APP_NAME)/%.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+$(OBJ_DIR)/$(SRC_DIR)/$(LIB_NAME)/%.o: $(SRC_DIR)/$(LIB_NAME)/%.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@ 
+
+lib: $(LIB_PATH)
+
+test: $(TEST_SOURCES) $(TEST_PATH) 
+
+$(TEST_PATH): $(TEST_OBJECTS) $(LIB_OBJECTS)
+	$(CC) -I thirdparty/ $(CPPFLAGS) $(TEST_OBJECTS) $(LIB_OBJECTS) -o $@ $(LBOFLAGS)
+
+$(OBJ_DIR)/$(TEST_DIR)/%.o: $(TEST_DIR)/%.c $(LIB_PATH)
+	$(CC) -c $(CFLAGS) -I thirdparty/ $(CPPFLAGS) $< -o $@ $(LBOFLAGS)
+
+.PHONY: clean
+clean:
+	$(RM) $(APP_PATH) $(LIB_PATH) $(TEST_PATH)
+	find $(OBJ_DIR) -name '*.o' -exec $(RM) '{}' \;
+	find $(OBJ_DIR) -name '*.d' -exec $(RM) '{}' \;
