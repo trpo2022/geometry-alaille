@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "libgeometry/lib_calc_trans.h"
-#include "libgeometry/lib_main_chek.h"
+#include "libgeometry/libmainchek.h"
 
 int main()
 {
