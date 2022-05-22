@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/lib_calc_trans.h"
-#include "lib/libmainchek.h"
+#include "libgeometry/lib_calc_trans.h"
+#include "libgeometry/lib_main_chek.h"
 
 int main()
 {
@@ -39,7 +39,6 @@ int main()
     if (isalpha(*mark3) != 0) {
         while (isalpha(*mark4) != 0)
             mark4++;
-
     }
 
     if (mainchek(mark3, wr) == 1)
