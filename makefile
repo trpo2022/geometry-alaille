@@ -7,13 +7,14 @@ CFLAGS = -Wall -Werror
 CPPFLAGS = -I src -MP -MMD
 LBOFLAGS = -lm
 
+BIN_DIR = bin
 OBJ_DIR = obj
 SRC_DIR = src
 TEST_DIR = test
 
-TEST_PATH = $(TEST_NAME)
-APP_PATH = $(APP_NAME)
-LIB_PATH = $(OBJ_DIR)/$(SRC_DIR)/$(LIB_NAME)/$(LIB_NAME).a
+APP_PATH = bin/geometry
+TEST_PATH = bin/test
+LIB_PATH = obj/src/libgeometry/libgeometry.a
 
 SRC_EXT = c
 
@@ -29,7 +30,7 @@ LIB_OBJECTS = $(LIB_SOURCES:$(SRC_DIR)/%.$(SRC_EXT)=$(OBJ_DIR)/$(SRC_DIR)/%.o)
 DEPS = $(APP_OBJECTS:.o=.d) $(LIB_OBJECTS:.o=.d) $(TEST_OBJECTS:.o=.d) 
 
 .PHONY: test clean
-all: $(APP_PATH)
+all: bin/geometry
 
 -include $(DEPS)
 
