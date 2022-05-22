@@ -48,7 +48,7 @@ test: $(TEST_PATH)
 -include $(DEPS)
 
 $(TEST_PATH): $(TEST_OBJECTS) $(LIB_PATH)
-	$(CC) $(CFGLAGS) -I thirdparty/ -o $@ $(LDFLAGS) $(LDLIBS) -lm
+	$(CC) $(CFGLAGS) -I thirdparty $^ -o $@ $(LDFLAGS) $(LDLIBS) -lm
 
 
 .PHONY: clean
