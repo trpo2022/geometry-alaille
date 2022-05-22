@@ -1,50 +1,21 @@
 #include "ctest.h"
-#include <stdbool.h>
-#include <stdio.h>
 
 #include "libgeometry/libmainchek.h"
 
-CTEST(input, word_chek_true)
+CTEST(getcircle, test1)
 {
-    char* str = "circle(1 2,3)";
-    char* mark = str;
-    char* wr = "circle";
-    bool result = word_chek(wr, mark);
-    ASSERT_TRUE(result);
+    char str[] = "(1.0 2.0, 3)";
+    circle c1 = getcircle(str);
+
+    double x = 1.0, y = 2.0, r = 3.0;
+
+    ASSERT_DBL_NEAR(c1.x, x);
+    ASSERT_DBL_NEAR(c1.y, y);
+    ASSERT_DBL_NEAR(c1.r, r);
 }
-CTEST(input, search_comma_true)
+
+CTEST(isCorrect, test1)
 {
-    char* str = "circle(1 2,3)";
-    char* mark = str;
-    bool result = search_comma(mark);
-    ASSERT_TRUE(result);
-}
-CTEST(input, search_breckets_true)
-{
-    char* str = "circle(1 2,3)";
-    char* mark = str;
-    bool result = search_breckets(mark);
-    ASSERT_TRUE(result);
-}
-CTEST(input, word_chek_false)
-{
-    char* str = "cirle123";
-    char* mark = str;
-    char* wr = "circle";
-    bool result = word_chek(wr, mark);
-    ASSERT_FALSE(result);
-}
-CTEST(input, search_comma_false)
-{
-    char* str = "cirle123";
-    char* mark = str;
-    bool result = search_comma(mark);
-    ASSERT_TRUE(result);
-}
-CTEST(input, search_breckets_false)
-{
-    char* str = "cirle123";
-    char* mark = str;
-    bool result = search_breckets(mark);
-    ASSERT_TRUE(result);
+    int rez = isCorrect("cercle(1.0 2.0, 3)");
+    ASSERT_EQUAL(rez, 0);
 }
