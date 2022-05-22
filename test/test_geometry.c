@@ -4,8 +4,7 @@
 
 #include "lib/libmainchek.h"
 
-
-
+// start of the correct input tests
 CTEST(input, word_chek_true)
 {
     char* str = "circle(1 2,3)";
@@ -28,6 +27,8 @@ CTEST(input, search_breckets_true)
     bool result = search_breckets(mark);
     ASSERT_TRUE(result);
 }
+// end of the correct input tests
+// start of invalid input tests
 CTEST(input, word_chek_false)
 {
     char* str = "cirle123";
